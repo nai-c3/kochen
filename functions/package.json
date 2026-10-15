@@ -1,0 +1,12 @@
+{
+  "name": "kochbuch-functions",
+  "private": true,
+  "type": "module",
+  "main": "index.js",
+  "engines": { "node": "22" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0",
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.1.0"
+  }
+}

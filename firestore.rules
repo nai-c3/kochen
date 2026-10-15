@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Nur das gemeinsame Familienkonto darf lesen und schreiben.
+    function isFamily() {
+      return request.auth != null && request.auth.token.email == "familie@kochbuch.example";
+    }
+    match /recipes/{id} {
+      allow read, write: if isFamily();
+    }
+    match /photos/{id} {
+      allow read, write: if isFamily() && (request.resource == null || request.resource.size() < 900000);
+    }
+  }
+}
