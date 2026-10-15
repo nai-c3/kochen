@@ -1,4 +1,4 @@
-# Unser Kochbuch
+# Nikikis Kochbuch
 
 Rezeptsammlung für die Familie, als installierbare Web-App fürs Handy.
 

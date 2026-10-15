@@ -591,7 +591,7 @@ async function buildRecipePdf(r, serv) {
   const font = (style, size) => { pdf.setFont("helvetica", style); pdf.setFontSize(size); };
   const sweet = r.kind === "süß";
   const baseServ = r.servings || 4, f = serv / baseServ;
-  pdf.setProperties({ title: pdfText(r.title), subject: "Rezept", creator: "Unser Kochbuch" });
+  pdf.setProperties({ title: pdfText(r.title), subject: "Rezept", creator: "Nikikis Kochbuch" });
 
   // Kopf: Farbfeld mit Halftone-Raster, Titel in Versalien
   font("bold", 24);
@@ -614,7 +614,7 @@ async function buildRecipePdf(r, serv) {
   let y = bandH + 10, page = 1;
   const footer = () => {
     font("normal", 8); ink(C.muted);
-    pdf.text(pdfText("Aus „Unser Kochbuch“"), M, H - 9);
+    pdf.text(pdfText("Aus Nikikis Kochbuch"), M, H - 9);
     pdf.text(`Seite ${page}`, W - M, H - 9, { align: "right" });
   };
   const ensure = h => { if (y + h > BOTTOM) { footer(); pdf.addPage(); page++; y = M; } };
