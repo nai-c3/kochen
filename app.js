@@ -931,7 +931,13 @@ if (!configured) {
     $("#gatebtn").disabled = true; err.hidden = true;
     try { await signInWithEmailAndPassword(auth, FAMILY_EMAIL, pw); $("#gatepw").value = ""; }
     catch (ex) {
-      err.textContent = ex?.code === "auth/too-many-requests" ? "Zu viele Versuche. Warte kurz und versuch es dann noch einmal." : ex?.code === "auth/network-request-failed" ? "Keine Internetverbindung." : "Das Passwort stimmt nicht.";
+      const c = ex?.code || "";
+      err.textContent = ["auth/invalid-credential", "auth/wrong-password", "auth/invalid-login-credentials"].includes(c) ? "Das Passwort stimmt nicht."
+        : c === "auth/user-not-found" ? "Das Familienkonto familie@kochbuch.example gibt es in Firebase noch nicht."
+        : c === "auth/operation-not-allowed" ? "In Firebase ist die Anmeldung mit E-Mail/Passwort noch nicht eingeschaltet."
+        : c === "auth/too-many-requests" ? "Zu viele Versuche. Warte ein paar Minuten und versuch es dann noch einmal."
+        : c === "auth/network-request-failed" ? "Keine Internetverbindung."
+        : `Anmeldung fehlgeschlagen (${c || "unbekannter Fehler"}).`;
       err.hidden = false;
     } finally { $("#gatebtn").disabled = false; }
   });
