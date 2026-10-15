@@ -11,12 +11,13 @@ Rezeptsammlung für die Familie, als installierbare Web-App fürs Handy.
 - Portionen umrechnen, Zutaten und Schritte beim Kochen abhaken, Bildschirm bleibt an
 - Neue Rezepte per KI aus Foto, Screenshot, Text oder Link; oder von Hand eintragen
 - Gemeinsames Familien-Passwort, Rezepte auch offline lesbar
+- Rezept als PDF teilen (mit Foto, umgerechneten Portionen, Zutaten, Schritten, Notiz und Quelle), z. B. per WhatsApp oder Mail
 - Sichern und Importieren aller Rezepte als Datei
 
 ## Aufbau
 | Teil | Wo | Datei |
 |---|---|---|
-| Seite (statisch) | GitHub Pages | `index.html`, `app.js`, `sw.js`, `manifest.webmanifest`, `icons/`, `fonts/` |
+| Seite (statisch) | GitHub Pages | `index.html`, `app.js`, `sw.js`, `manifest.webmanifest`, `icons/`, `fonts/`, `vendor/` (jsPDF 4.2.1, MIT) |
 | Zugangsdaten der Web-App | im Repo | `firebase-config.js` |
 | Rezepte und Fotos | Firebase Firestore | Regeln in `firestore.rules` |
 | Anmeldung | Firebase Authentication | ein Konto `familie@kochbuch.example` |

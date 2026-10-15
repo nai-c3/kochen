@@ -187,6 +187,7 @@ function releaseWake() { try { wake?.release(); } catch {} wake = null; }
 
 /* ---------- Rezept ansehen ---------- */
 function openDetail(id, fromRandom = false) {
+  loadJsPdf().catch(() => {});
   S.detail = { id, servings: null, fromRandom, doneI: new Set(), doneS: new Set(), confirmDel: false };
   renderDetail();
   openSheet("detail");
@@ -257,6 +258,9 @@ function renderDetail() {
         <ol class="steps">${r.steps.map((s, n) => `<li data-step="${n}" class="${D.doneS.has(n) ? "done" : ""}"><span>${esc(s)}</span></li>`).join("")}</ol>
       </div>` : ""}
       ${r.note ? `<div class="section"><h3>Notiz</h3><div class="note">${esc(r.note)}</div></div>` : ""}
+      <div class="section actions">
+        <button class="btn sun" type="button" data-action="share">Rezept teilen (PDF)</button>
+      </div>
       ${S.canWrite ? `<div class="section actions">
         <button class="btn" type="button" data-action="cooked">Heute gekocht</button>
         <button class="btn ghost" type="button" data-action="edit">Bearbeiten</button>
@@ -551,6 +555,176 @@ async function saveForm(ev) {
   }
 }
 
+/* ---------- Teilen als PDF ---------- */
+let jsPdfPromise = null;
+function loadJsPdf() {
+  if (window.jspdf?.jsPDF) return Promise.resolve(window.jspdf.jsPDF);
+  jsPdfPromise ??= new Promise((resolve, reject) => {
+    const sc = document.createElement("script");
+    sc.src = "vendor/jspdf.umd.min.js";
+    sc.onload = () => window.jspdf?.jsPDF ? resolve(window.jspdf.jsPDF) : reject(new Error("jspdf"));
+    sc.onerror = () => { jsPdfPromise = null; reject(new Error("jspdf")); };
+    document.head.append(sc);
+  });
+  return jsPdfPromise;
+}
+// Die PDF-Standardschrift kennt nur Westeuropäisch (WinAnsi): Brüche und Sonderzeichen umschreiben.
+const PDF_MAP = { "⅓": " 1/3", "⅔": " 2/3", "⅛": " 1/8", "✓": "", "→": "->", "×": "x", "−": "-" };
+const pdfText = s => String(s ?? "").replace(/[⅓⅔⅛✓→×−]/g, c => PDF_MAP[c]).replace(/^ /, "")
+  .replace(/[^\x09\x0A\x0D\x20-\xFF–—‘’‚“”„•…€]/g, "").replace(/(\d) (1\/[38]|2\/3)/g, "$1 $2");
+function imageSize(src) {
+  return new Promise(res => { const im = new Image(); im.onload = () => res({ w: im.naturalWidth, h: im.naturalHeight }); im.onerror = () => res(null); im.src = src; });
+}
+async function buildRecipePdf(r, serv) {
+  const jsPDF = await loadJsPdf();
+  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  const W = 210, H = 297, M = 16, BOTTOM = H - 16;
+  const C = { ultra: [63, 55, 255], cobalt: [2, 63, 165], mid: [36, 13, 87], violet: [89, 39, 149], sun: [251, 197, 7], paper: [236, 237, 223], muted: [110, 100, 130], line: [214, 212, 225] };
+  const pt = n => n * 0.3528;
+  const fill = c => pdf.setFillColor(...c), ink = c => pdf.setTextColor(...c);
+  const font = (style, size) => { pdf.setFont("helvetica", style); pdf.setFontSize(size); };
+  const sweet = r.kind === "süß";
+  const baseServ = r.servings || 4, f = serv / baseServ;
+  pdf.setProperties({ title: pdfText(r.title), subject: "Rezept", creator: "Unser Kochbuch" });
+
+  // Kopf: Farbfeld mit Halftone-Raster, Titel in Versalien
+  font("bold", 24);
+  const titleLines = pdf.splitTextToSize(pdfText(r.title).toUpperCase(), W - 2 * M - 10);
+  const lhTitle = pt(24) * 1.05;
+  const bandH = 16 + titleLines.length * lhTitle + 14;
+  fill(sweet ? C.violet : C.ultra); pdf.rect(0, 0, W, bandH, "F");
+  fill(sweet ? C.mid : C.cobalt);
+  for (let y = 3; y < bandH; y += 4) for (let x = W - 3; x > W - 90; x -= 4) {
+    const d = Math.hypot((W - x) / 90, y / bandH);
+    const rad = 1.3 * (1 - d / 1.05);
+    if (rad > 0.15) pdf.circle(x, y, rad, "F");
+  }
+  ink(sweet ? C.sun : C.paper); font("bold", 24);
+  pdf.text(titleLines, M, 16, { baseline: "top", lineHeightFactor: 1.05 });
+  const meta = [sweet ? "Süß" : "Herzhaft", r.time ? `${r.time} Min.` : "", `${serv} ${serv === 1 ? "Portion" : "Portionen"}`].filter(Boolean).join("  ·  ");
+  ink(C.sun); font("bold", 10);
+  pdf.text(pdfText(meta).toUpperCase(), M, 16 + titleLines.length * lhTitle + 4, { baseline: "top" });
+
+  let y = bandH + 10, page = 1;
+  const footer = () => {
+    font("normal", 8); ink(C.muted);
+    pdf.text(pdfText("Aus „Unser Kochbuch“"), M, H - 9);
+    pdf.text(`Seite ${page}`, W - M, H - 9, { align: "right" });
+  };
+  const ensure = h => { if (y + h > BOTTOM) { footer(); pdf.addPage(); page++; y = M; } };
+
+  if ((r.tags || []).length) {
+    font("bold", 9); ink(C.ultra);
+    const tl = pdf.splitTextToSize(pdfText(r.tags.map(t => "#" + t.toUpperCase()).join("   ")), W - 2 * M);
+    pdf.text(tl, M, y, { baseline: "top" }); y += tl.length * pt(9) * 1.3 + 6;
+  }
+
+  // Foto rechts, Zutaten links
+  const photo = S.photos.get(r.id) || r.thumb;
+  let photoBottom = y, colW = W - 2 * M;
+  if (photo) {
+    const size = await imageSize(photo);
+    if (size) {
+      const box = 68, ratio = size.w / size.h;
+      const pw = ratio >= 1 ? box : box * ratio, ph = ratio >= 1 ? box / ratio : box;
+      try { pdf.addImage(photo, "JPEG", W - M - pw, y, pw, ph); photoBottom = y + ph; colW = W - 2 * M - box - 8; } catch {}
+    }
+  }
+  font("bold", 13); ink(C.mid);
+  pdf.text("ZUTATEN", M, y, { baseline: "top" });
+  font("normal", 9); ink(C.muted);
+  pdf.text(f !== 1 ? `für ${serv} Portionen (Original: ${baseServ})` : `für ${serv} ${serv === 1 ? "Portion" : "Portionen"}`, M, y + pt(13) * 1.3, { baseline: "top" });
+  y += pt(13) * 1.3 + pt(9) * 1.3 + 4;
+  const amtW = 24;
+  for (const i of r.ingredients || []) {
+    if (i.h) {
+      ensure(10); y += 2;
+      font("bold", 8.5); ink(C.muted);
+      pdf.text(pdfText(i.n).toUpperCase(), M, y, { baseline: "top" }); y += pt(8.5) * 1.4 + 1;
+      continue;
+    }
+    const w = y < photoBottom ? colW : W - 2 * M;
+    font("normal", 11);
+    const lines = pdf.splitTextToSize(pdfText(i.n), w - amtW - 3);
+    const h = lines.length * pt(11) * 1.25 + 2.6;
+    ensure(h);
+    const amt = pdfText([fmtAmount(i.a != null ? i.a * f : null, i.u), i.u].filter(Boolean).join(" "));
+    font("bold", 10.5); ink(C.ultra);
+    if (amt) pdf.text(amt, M + amtW, y, { baseline: "top", align: "right" });
+    font("normal", 11); ink(C.mid);
+    pdf.text(lines, M + amtW + 3, y, { baseline: "top", lineHeightFactor: 1.25 });
+    y += h;
+    pdf.setDrawColor(...C.line); pdf.setLineWidth(0.2); pdf.line(M, y - 1.3, M + w, y - 1.3);
+  }
+  y = Math.max(y, photoBottom) + 10;
+
+  // Zubereitung mit Zahlen-Badges
+  if ((r.steps || []).length) {
+    ensure(20);
+    font("bold", 13); ink(C.mid);
+    pdf.text("ZUBEREITUNG", M, y, { baseline: "top" }); y += pt(13) * 1.3 + 4;
+    r.steps.forEach((st, n) => {
+      font("normal", 11);
+      const lines = pdf.splitTextToSize(pdfText(st), W - 2 * M - 12);
+      const h = Math.max(8, lines.length * pt(11) * 1.3) + 4;
+      ensure(h);
+      fill(C.mid); pdf.roundedRect(M, y, 8, 8, 1.8, 1.8, "F");
+      font("bold", 10); ink(C.sun);
+      pdf.text(String(n + 1), M + 4, y + 4, { align: "center", baseline: "middle" });
+      font("normal", 11); ink(C.mid);
+      pdf.text(lines, M + 12, y + 1.2, { baseline: "top", lineHeightFactor: 1.3 });
+      y += h;
+    });
+    y += 4;
+  }
+
+  if (r.note) {
+    font("normal", 10.5);
+    const lines = pdf.splitTextToSize(pdfText(r.note), W - 2 * M - 10);
+    const h = lines.length * pt(10.5) * 1.3 + 14;
+    ensure(h);
+    fill(C.paper); pdf.rect(M, y, W - 2 * M, h, "F");
+    font("bold", 8.5); ink(C.muted); pdf.text("NOTIZ", M + 5, y + 4, { baseline: "top" });
+    font("normal", 10.5); ink(C.mid); pdf.text(lines, M + 5, y + 9, { baseline: "top", lineHeightFactor: 1.3 });
+    y += h + 6;
+  }
+  if (r.source) {
+    font("normal", 9); ink(C.muted);
+    const lines = pdf.splitTextToSize(pdfText("Quelle: " + r.source), W - 2 * M);
+    ensure(lines.length * 4 + 2);
+    pdf.text(lines, M, y, { baseline: "top" });
+  }
+  footer();
+  return pdf.output("blob");
+}
+const pdfName = t => (norm(t).replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue").replace(/ß/g, "ss").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "rezept") + ".pdf";
+let shareCache = null;
+async function shareRecipe() {
+  const D = S.detail, r = S.recipes.find(x => x.id === D?.id);
+  if (!r) return;
+  const serv = D.servings ?? (r.servings || 4);
+  const key = `${r.id}|${serv}|${r.updatedAt || ""}|${S.photos.has(r.id)}`;
+  let file = shareCache?.key === key ? shareCache.file : null;
+  if (!file) {
+    toast("PDF wird erstellt …");
+    try { file = new File([await buildRecipePdf(r, serv)], pdfName(r.title), { type: "application/pdf" }); }
+    catch { toast("Das PDF konnte nicht erstellt werden."); return; }
+    shareCache = { key, file };
+  }
+  if (navigator.canShare?.({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: r.title, text: `Rezept: ${r.title}` }); return; }
+    catch (e) {
+      if (e?.name === "AbortError") return;
+      if (e?.name === "NotAllowedError") { toast("PDF ist fertig. Tippe noch einmal auf Teilen."); return; }
+    }
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(file); a.download = file.name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast("PDF gespeichert");
+}
+
 /* ---------- Aktionen ---------- */
 async function markCooked() {
   const r = S.recipes.find(x => x.id === S.detail?.id);
@@ -606,6 +780,7 @@ document.addEventListener("click", e => {
     case "stop": S.draft.token = null; S.draft.busy = false; return renderAdd();
     case "reroll": { const r = pickRandom(); if (r) { S.detail = { id: r.id, servings: null, fromRandom: true, doneI: new Set(), doneS: new Set(), confirmDel: false }; renderDetail(); $("#detail").scrollTop = 0; loadPhoto(r.id); } return; }
     case "cooked": return markCooked();
+    case "share": return shareRecipe();
     case "edit": { const r = S.recipes.find(x => x.id === S.detail.id); if (r) openForm(r, { id: r.id }); return; }
     case "delete": S.detail.confirmDel = true; return renderDetail();
     case "delete-no": S.detail.confirmDel = false; return renderDetail();
