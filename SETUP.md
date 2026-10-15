@@ -44,8 +44,9 @@ Diese Werte sind nicht geheim, sie stehen bei jeder Firebase-Web-App im Browser.
 2. Kopiere die folgenden Befehle einzeln hinein. Ersetze `DEINE-PROJEKT-ID` durch die Projekt-ID aus Schritt 4 (steht auch in `firebase-config.js` bei `projectId`).
 
 ```bash
-git clone https://github.com/nai-c3/kochen.git
+git clone -b claude/great-maxwell-h7wbct https://github.com/nai-c3/kochen.git
 cd kochen
+npm --prefix functions install
 npx -y firebase-tools@15 login --no-localhost
 ```
 
