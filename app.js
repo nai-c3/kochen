@@ -13,9 +13,10 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, v); } catch {} },
 };
 
+const STAR = (on, size = 18) => `<svg class="star${on ? " on" : ""}" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z"/></svg>`;
 const S = {
   recipes: [], status: "loading", q: "", kind: "alle", tags: new Set(), ings: [],
-  sort: store.get("kb.sort") || "neu", canWrite: false, db: null, ai: null, maxImages: 4,
+  sort: store.get("kb.sort") || "neu", favOnly: false, canWrite: false, db: null, ai: null, maxImages: 4,
   photos: new Map(), detail: null, lastRandom: [], form: null, draft: null,
 };
 
@@ -60,6 +61,7 @@ const ingNames = r => (r.ingredients || []).filter(i => !i.h).map(i => norm(i.n)
 /* ---------- Filtern ---------- */
 function matches(r, ignoreKind) {
   if (!ignoreKind && S.kind !== "alle" && r.kind !== S.kind) return false;
+  if (S.favOnly && !r.fav) return false;
   for (const t of S.tags) if (!(r.tags || []).includes(t)) return false;
   const names = ingNames(r);
   for (const f of S.ings) if (!names.some(n => n.includes(f))) return false;
@@ -110,8 +112,9 @@ function render() {
   $$(".top .seg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.kind === S.kind)));
 
   const tags = allTags();
-  $("#tagrow").innerHTML = tags.map(t => `<button type="button" class="chip" data-tag="${esc(t)}" aria-pressed="${S.tags.has(t)}">#${esc(t)}</button>`).join("");
-  $("#tagrow").hidden = !tags.length;
+  const favCount = S.recipes.filter(r => r.fav).length;
+  $("#tagrow").innerHTML = `<button type="button" class="chip fav" data-action="favfilter" aria-pressed="${S.favOnly}">${STAR(S.favOnly || favCount > 0, 14)} Favoriten${favCount ? ` <small>${favCount}</small>` : ""}</button>` + tags.map(t => `<button type="button" class="chip" data-tag="${esc(t)}" aria-pressed="${S.tags.has(t)}">#${esc(t)}</button>`).join("");
+  $("#tagrow").hidden = S.status !== "ready" || !S.recipes.length;
 
   // Zutaten-Vorschläge zur Sucheingabe
   const q = norm(S.q);
@@ -124,7 +127,7 @@ function render() {
   } else sg.hidden = true;
 
   const act = $("#active");
-  const anyFilter = S.ings.length || S.tags.size || S.kind !== "alle" || q;
+  const anyFilter = S.ings.length || S.tags.size || S.kind !== "alle" || q || S.favOnly;
   act.innerHTML = S.ings.map(n => `<button type="button" class="chip ing" aria-pressed="true" data-rmIng="${esc(n)}">mit ${esc(n)} ×</button>`).join("")
     + (anyFilter ? `<button type="button" class="reset" id="resetall">Filter zurücksetzen</button>` : "");
   act.hidden = !anyFilter;
@@ -142,7 +145,7 @@ function render() {
     <button type="button" class="card" data-open="${esc(r.id)}">
       ${thumbHTML(r)}
       <div class="body">
-        <h3>${esc(r.title)}</h3>
+        <h3>${r.fav ? `<span class="favmark" aria-label="Favorit">${STAR(true, 15)}</span>` : ""}${esc(r.title)}</h3>
         <div class="meta"><span class="kind-dot ${r.kind === "süß" ? "süß" : ""}"></span>${esc(r.kind === "süß" ? "Süß" : "Herzhaft")}${metaLine(r) ? " · " + esc(metaLine(r)) : ""}</div>
         ${(r.tags || []).length ? `<div class="tags">${r.tags.slice(0, 4).map(t => `<span>#${esc(t)}</span>`).join("")}</div>` : ""}
       </div>
@@ -224,7 +227,10 @@ function renderDetail() {
   el.innerHTML = `
     <div class="bar">
       <button class="iconbtn" type="button" data-close="detail" aria-label="Zurück">←</button>
-      ${D.fromRandom ? `<button class="btn sm sun" type="button" data-action="reroll">Nochmal würfeln</button>` : "<span></span>"}
+      <div style="display:flex;gap:6px;align-items:center">
+        ${D.fromRandom ? `<button class="btn sm sun" type="button" data-action="reroll">Nochmal würfeln</button>` : ""}
+        ${S.canWrite ? `<button class="iconbtn favbtn" type="button" data-action="fav" aria-pressed="${!!r.fav}" aria-label="${r.fav ? "Aus Favoriten entfernen" : "Als Favorit merken"}">${STAR(!!r.fav, 22)}</button>` : ""}
+      </div>
     </div>
     <div class="inner">
       <div class="hero ${k}${photo ? "" : " nophoto"}">${photo ? `<img src="${esc(photo)}" alt="${esc(r.title)}">` : esc((r.title || "?").charAt(0).toUpperCase())}</div>
@@ -537,7 +543,7 @@ async function saveForm(ev) {
     ingredients, steps, note: $("#f-note").value.trim(), source: $("#f-source").value.trim(),
     thumb: F.thumb || null, hasPhoto,
     createdAt: old?.createdAt || Date.now(), updatedAt: Date.now(),
-    lastCooked: old?.lastCooked || null, cookCount: old?.cookCount || 0,
+    lastCooked: old?.lastCooked || null, cookCount: old?.cookCount || 0, fav: !!old?.fav,
   };
   $("#f-save").disabled = true; err.hidden = true;
   try {
@@ -741,7 +747,13 @@ async function deleteRecipe() {
     closeSheet("detail"); toast("Rezept gelöscht");
   } catch { toast("Löschen hat nicht geklappt"); }
 }
-function resetFilters() { S.q = ""; $("#q").value = ""; $("#qclear").hidden = true; S.kind = "alle"; S.tags.clear(); S.ings = []; render(); }
+function resetFilters() { S.q = ""; $("#q").value = ""; $("#qclear").hidden = true; S.kind = "alle"; S.tags.clear(); S.ings = []; S.favOnly = false; render(); }
+async function toggleFav() {
+  const r = S.recipes.find(x => x.id === S.detail?.id);
+  if (!r) return;
+  try { await S.db.doc("recipes/" + r.id).update({ fav: !r.fav }); toast(r.fav ? "Aus Favoriten entfernt" : "Zu Favoriten hinzugefügt"); }
+  catch { toast("Konnte nicht gespeichert werden"); }
+}
 
 document.addEventListener("click", e => {
   const t = e.target.closest("button, [data-open]");
@@ -780,6 +792,8 @@ document.addEventListener("click", e => {
     case "stop": S.draft.token = null; S.draft.busy = false; return renderAdd();
     case "reroll": { const r = pickRandom(); if (r) { S.detail = { id: r.id, servings: null, fromRandom: true, doneI: new Set(), doneS: new Set(), confirmDel: false }; renderDetail(); $("#detail").scrollTop = 0; loadPhoto(r.id); } return; }
     case "cooked": return markCooked();
+    case "fav": return toggleFav();
+    case "favfilter": S.favOnly = !S.favOnly; return render();
     case "share": return shareRecipe();
     case "edit": { const r = S.recipes.find(x => x.id === S.detail.id); if (r) openForm(r, { id: r.id }); return; }
     case "delete": S.detail.confirmDel = true; return renderDetail();

@@ -6,7 +6,7 @@ Rezeptsammlung für die Familie, als installierbare Web-App fürs Handy.
 
 ## Funktionen
 - Rezepte nach Zutat filtern („Alles mit Hähnchen“), nach Name oder Kategorie suchen
-- Herzhaft / Süß und Kategorien (#nudeln, #schnell …)
+- Herzhaft / Süß, Kategorien (#nudeln, #schnell …) und Favoriten (Stern im Rezept, Filter „Favoriten“)
 - Zufallsgericht-Würfel; er beachtet die aktiven Filter und lässt kürzlich Gekochtes aus
 - Portionen umrechnen, Zutaten und Schritte beim Kochen abhaken, Bildschirm bleibt an
 - Neue Rezepte per KI aus Foto, Screenshot, Text oder Link; oder von Hand eintragen
@@ -26,7 +26,7 @@ Rezeptsammlung für die Familie, als installierbare Web-App fürs Handy.
 Die Funktion ruft bei Links die Seite selbst ab und liest die strukturierten Rezeptdaten (schema.org) und das Vorschaubild. Blockiert eine Seite den Abruf, holt Claude sie über das Web-Fetch-Werkzeug. Der Claude-API-Schlüssel liegt als Firebase-Secret auf dem Server.
 
 ## Datenmodell
-- `recipes/{id}`: title, kind (herzhaft|süß), servings, time, tags[], ingredients[{a,u,n} | {h:true,n}], steps[], note, source, thumb, hasPhoto, createdAt, updatedAt, lastCooked, cookCount
+- `recipes/{id}`: title, kind (herzhaft|süß), servings, time, tags[], ingredients[{a,u,n} | {h:true,n}], steps[], note, source, thumb, hasPhoto, createdAt, updatedAt, lastCooked, cookCount, fav
 - `photos/{id}`: src (JPEG als Data-URL)
 
 ## Design

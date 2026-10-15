@@ -1,5 +1,5 @@
 // Offline-Hülle: App-Dateien werden zwischengespeichert, Rezepte hält Firestore selbst offline vor.
-const CACHE = "kochbuch-v2";
+const CACHE = "kochbuch-v3";
 const SHELL = ["./", "index.html", "app.js", "vendor/jspdf.umd.min.js", "firebase-config.js", "manifest.webmanifest", "fonts/YoungSerif-Light.otf", "icons/icon-192.png"];
 
 self.addEventListener("install", e => {

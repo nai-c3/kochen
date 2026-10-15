@@ -243,6 +243,18 @@ textarea:focus, .field input:focus { outline: 3px solid var(--sun); outline-offs
 .gate .err { color: var(--sun); }
 .settings-list { display: grid; gap: 6px; }
 .settings-list .btn { justify-content: flex-start; }
+
+/* Favoriten */
+.star { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; flex: none; }
+.star.on { fill: var(--sun); stroke: var(--sun); }
+.chip.fav { display: inline-flex; align-items: center; gap: 6px; }
+.chip.fav small { font-family: var(--f-serif); font-weight: 300; font-size: .8rem; text-transform: none; }
+.chip.fav[aria-pressed="true"] { background: var(--sun); color: var(--midnight); }
+.chip.fav[aria-pressed="true"] .star.on { fill: var(--midnight); stroke: var(--midnight); }
+.favmark { display: inline-block; vertical-align: -1px; margin-right: 6px; }
+.favmark .star.on { stroke: var(--midnight); stroke-width: 1.2; }
+.favbtn .star { color: var(--ink); }
+.favbtn[aria-pressed="true"] { background: var(--midnight); }
 </style>
 </head>
 <body>
