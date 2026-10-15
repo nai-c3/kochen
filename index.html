@@ -1,181 +1,211 @@
 <title>Unser Kochbuch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@800&family=Young+Serif&display=swap">
 <style>
-/* Layout: eine Spalte fürs Handy. Kopf mit Suche und Filtern, darunter der Würfel und die Rezeptliste; Rezept und Formular öffnen als Vollbild-Blatt. */
+/* Layout: Design-System „Linkedin-Niklas“ fürs Handy. Vollflächige Farbfelder, ein Grund und eine Akzentfarbe je Fläche, Versal-Grotesk für Aussagen, Serif für Fließtext, Halftone-Raster statt Schatten. */
+@font-face { font-family: "Young Serif Light"; src: url("fonts/YoungSerif-Light.otf") format("opentype"); font-weight: 300; font-display: swap; }
 :root {
-  --bg: #F2F5EE;
-  --surface: #FFFFFF;
-  --ink: #1C251E;
-  --muted: #5D6A5F;
-  --line: #D9E0D3;
-  --basil: #2D684A;
-  --basil-soft: #DFEBE2;
-  --saffron: #E9A417;
-  --saffron-ink: #2F2200;
-  --berry: #A3375C;
-  --berry-soft: #F5E2E9;
-  --danger: #B3261E;
-  --shadow: 0 1px 2px rgba(28, 37, 30, .06), 0 4px 14px rgba(28, 37, 30, .06);
-  --f-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
-  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --r: 14px;
+  --ultramarine: #3F37FF; --cobalt: #023FA5; --midnight: #240D57; --violet: #592795; --raspberry: #EA465C;
+  --signal-red: #ED292A; --sun: #FBC507; --rust: #CE4000; --magenta: #ED40B5; --paper: #ECEDDF; --white: #FFFFFF;
+  --bg: var(--paper);
+  --surface: var(--white);
+  --ink: var(--midnight);
+  --muted: color-mix(in srgb, var(--midnight) 70%, var(--paper));
+  --line: color-mix(in srgb, var(--midnight) 13%, var(--paper));
+  --accent: var(--ultramarine);
+  --on-accent: var(--paper);
+  --tagc: var(--ultramarine);
+  --badge: var(--midnight);
+  --on-badge: var(--paper);
+  --danger: var(--signal-red);
+  --f-display: "PP Agrandir Grand Heavy", "PPAgrandir-GrandHeavy", "PP Agrandir", "Unbounded", system-ui, sans-serif;
+  --f-serif: "Young Serif Light", "Young Serif", Georgia, serif;
+  --margin: 16px;
+  --halftone-pitch: 10px;
+  --radius-badge: 10px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111611; --surface: #1A211B; --ink: #E8EEE5; --muted: #9AA79C; --line: #2B352C;
-    --basil: #7FC6A0; --basil-soft: #1E3227; --saffron: #F1B53B; --saffron-ink: #2A1E00;
-    --berry: #E78DAD; --berry-soft: #3A1F2A; --danger: #F2827A;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
-    color-scheme: dark;
+    --bg: var(--midnight); --surface: color-mix(in srgb, var(--midnight) 80%, var(--violet)); --ink: var(--paper);
+    --muted: color-mix(in srgb, var(--paper) 70%, var(--midnight)); --line: color-mix(in srgb, var(--paper) 14%, var(--midnight));
+    --accent: var(--sun); --on-accent: var(--midnight); --tagc: var(--sun); --badge: var(--sun); --on-badge: var(--midnight);
+    --danger: var(--raspberry); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111611; --surface: #1A211B; --ink: #E8EEE5; --muted: #9AA79C; --line: #2B352C;
-  --basil: #7FC6A0; --basil-soft: #1E3227; --saffron: #F1B53B; --saffron-ink: #2A1E00;
-  --berry: #E78DAD; --berry-soft: #3A1F2A; --danger: #F2827A;
-  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
-  color-scheme: dark;
+  --bg: var(--midnight); --surface: color-mix(in srgb, var(--midnight) 80%, var(--violet)); --ink: var(--paper);
+  --muted: color-mix(in srgb, var(--paper) 70%, var(--midnight)); --line: color-mix(in srgb, var(--paper) 14%, var(--midnight));
+  --accent: var(--sun); --on-accent: var(--midnight); --tagc: var(--sun); --badge: var(--sun); --on-badge: var(--midnight);
+  --danger: var(--raspberry); color-scheme: dark;
 }
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.45; -webkit-tap-highlight-color: transparent; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-serif); font-weight: 300; font-size: 17px; line-height: 1.4; -webkit-tap-highlight-color: transparent; }
 button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--basil); outline-offset: 2px; }
-h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+h1, h2, h3, .disp { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; letter-spacing: -0.05em; text-wrap: balance; margin: 0; line-height: 1; }
+.lab { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; letter-spacing: .01em; font-size: .72rem; line-height: 1.2; }
 
-.wrap { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 0 120px; }
+/* Farbfeld oben */
+.band { position: relative; overflow: hidden; background: var(--ultramarine); color: var(--paper); padding-inline: var(--margin); padding-block: 30px 18px; }
+.band::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle, var(--cobalt) 36%, transparent 39%); background-size: var(--halftone-pitch) var(--halftone-pitch);
+  -webkit-mask: radial-gradient(ellipse 45% 85% at 88% 40%, #000 45%, transparent 75%); mask: radial-gradient(ellipse 45% 85% at 88% 40%, #000 45%, transparent 75%); }
+.band > * { position: relative; max-width: 640px; margin-inline: auto; }
+.band h1 { font-size: clamp(2.5rem, 12vw, 3.6rem); line-height: .92; }
+.band .count { display: block; margin-top: 14px; font-family: var(--f-serif); font-size: 1rem; text-align: right; font-variant-numeric: oldstyle-nums; }
 
-/* Kopf */
+.wrap { max-width: 640px; margin: 0 auto; padding-inline: var(--margin); padding-block: 0 120px; }
 .top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 14px 10px; display: grid; gap: 10px; }
-.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.brand h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; }
-.brand h1 span { color: var(--basil); }
-.count { color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
 .search { position: relative; }
-.search input { width: 100%; border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 11px 42px 11px 42px; font-size: 1rem; }
-.search input:focus { border-color: var(--basil); outline: none; }
-.search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-.search .clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: none; width: 34px; height: 34px; border-radius: 50%; color: var(--muted); font-size: 1.2rem; }
+.search input { width: 100%; border: 0; background: var(--surface); border-radius: 0; padding: 13px 44px; font-size: 1rem; }
+.search input::placeholder { color: var(--muted); }
+.search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ink); }
+.search .clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: none; width: 38px; height: 38px; color: var(--muted); font-size: 1.3rem; }
 .suggest { display: flex; flex-wrap: wrap; gap: 6px; }
-.seg { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface); border: 1.5px solid var(--line); border-radius: 999px; padding: 3px; }
-.seg button { border: 0; background: none; border-radius: 999px; padding: 7px 4px; font-weight: 600; font-size: .92rem; color: var(--muted); }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.seg button { border: 0; background: var(--surface); padding: 11px 4px; font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .72rem; letter-spacing: .01em; color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
-.seg button[data-kind="süß"][aria-pressed="true"] { background: var(--berry); color: var(--surface); }
-.seg button[data-kind="herzhaft"][aria-pressed="true"] { background: var(--basil); color: var(--surface); }
-.seg small { font-weight: 500; opacity: .75; font-variant-numeric: tabular-nums; }
-.chiprow { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+.seg button[data-kind="herzhaft"][aria-pressed="true"], .seg button[data-k="herzhaft"][aria-pressed="true"] { background: var(--ultramarine); color: var(--paper); }
+.seg button[data-kind="süß"][aria-pressed="true"], .seg button[data-k="süß"][aria-pressed="true"] { background: var(--violet); color: var(--sun); }
+.seg small { font-family: var(--f-serif); font-weight: 300; text-transform: none; font-size: .85rem; font-variant-numeric: oldstyle-nums; }
+.chiprow { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * var(--margin)); padding-inline: var(--margin); }
 .chiprow::-webkit-scrollbar { display: none; }
-.chip { flex: none; border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .88rem; font-weight: 500; white-space: nowrap; }
-.chip[aria-pressed="true"] { background: var(--basil); border-color: var(--basil); color: var(--surface); }
-.chip.ing { border-style: dashed; }
-.chip.ing[aria-pressed="true"] { border-style: solid; background: var(--saffron); border-color: var(--saffron); color: var(--saffron-ink); }
-.chip b { font-weight: 700; }
+.chip { flex: none; border: 0; background: var(--surface); border-radius: var(--radius-badge); padding: 8px 11px; font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .68rem; letter-spacing: .01em; white-space: nowrap; color: var(--ink); }
+.chip[aria-pressed="true"] { background: var(--ultramarine); color: var(--paper); }
+.chip.ing { background: transparent; box-shadow: inset 0 0 0 2px var(--sun); }
+.chip.ing[aria-pressed="true"] { background: var(--sun); color: var(--midnight); box-shadow: none; }
+.chip b { color: inherit; }
 .active { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.active .reset { border: 0; background: none; color: var(--basil); font-weight: 600; font-size: .88rem; padding: 4px 6px; }
+.active .reset { border: 0; background: none; color: var(--tagc); padding: 6px 4px; font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .68rem; text-decoration: underline; text-underline-offset: 3px; }
 
 /* Würfel */
-.dice { margin-top: 6px; width: 100%; border: 0; border-radius: 18px; background: var(--saffron); color: var(--saffron-ink); padding: 16px 18px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; text-align: left; box-shadow: var(--shadow); }
-.dice:active { transform: scale(.985); }
-.dice:disabled { opacity: .55; }
-.dice .lbl { font-family: var(--f-display); font-weight: 800; font-size: 1.2rem; line-height: 1.15; min-width: 0; overflow-wrap: anywhere; }
-.dice .sub { display: block; font-family: var(--f-body); font-weight: 500; font-size: .85rem; opacity: .8; }
-.dice svg.die { width: 44px; height: 44px; }
+.dice { position: relative; overflow: hidden; margin-top: 8px; width: 100%; border: 0; border-radius: 0; background: var(--sun); color: var(--midnight); padding: 20px 18px; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 16px; text-align: left; }
+.dice::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(circle, var(--paper) 32%, transparent 35%); background-size: var(--halftone-pitch) var(--halftone-pitch);
+  -webkit-mask: radial-gradient(ellipse 40% 90% at 92% 50%, #000 40%, transparent 72%); mask: radial-gradient(ellipse 40% 90% at 92% 50%, #000 40%, transparent 72%); }
+.dice > * { position: relative; }
+.dice:active { transform: scale(.99); }
+.dice:disabled { opacity: .5; }
+.dice .lbl { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; letter-spacing: -0.05em; font-size: 1.35rem; line-height: 1; min-width: 0; overflow-wrap: anywhere; }
+.dice .sub { display: block; margin-top: 8px; font-family: var(--f-serif); font-weight: 300; text-transform: none; letter-spacing: 0; font-size: .95rem; line-height: 1.25; color: var(--midnight); }
+.dice svg.die { width: 52px; height: 52px; }
 .dice.rolling svg.die { animation: roll .7s cubic-bezier(.3,.7,.4,1); }
 @keyframes roll { from { transform: rotate(-200deg) scale(.8); } to { transform: none; } }
 
 /* Liste */
-.listhead { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; margin-bottom: 8px; gap: 12px; }
-.listhead h2 { font-size: 1.05rem; font-weight: 700; }
-.listhead select { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 10px; font-size: .85rem; }
-.list { display: grid; gap: 10px; }
-.card { display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: center; border: 0; background: var(--surface); border-radius: var(--r); padding: 8px; text-align: left; width: 100%; box-shadow: var(--shadow); }
-.card .body { min-width: 0; display: grid; gap: 3px; padding-right: 6px; }
-.card h3 { font-size: 1.05rem; font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
-.meta { color: var(--muted); font-size: .84rem; font-variant-numeric: tabular-nums; }
-.tags { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: .8rem; color: var(--basil); font-weight: 600; }
-.thumb { width: 84px; height: 84px; border-radius: 10px; overflow: hidden; display: grid; place-items: center; background: var(--basil-soft); color: var(--basil); font-family: var(--f-display); font-weight: 800; font-size: 2rem; }
-.thumb.süß { background: var(--berry-soft); color: var(--berry); }
+.listhead { display: flex; justify-content: space-between; align-items: center; margin-top: 26px; margin-bottom: 10px; gap: 12px; }
+.listhead h2 { font-size: 1.05rem; }
+.listhead select { border: 0; background: var(--surface); border-radius: 0; padding: 8px 10px; font-family: var(--f-serif); font-size: .9rem; }
+.list { display: grid; gap: 6px; }
+.card { display: grid; grid-template-columns: 88px 1fr; gap: 14px; align-items: center; border: 0; border-radius: 0; background: var(--surface); padding: 0; text-align: left; width: 100%; color: var(--ink); }
+.card .body { min-width: 0; display: grid; gap: 6px; padding: 10px 12px 10px 0; }
+.card h3 { font-size: .98rem; line-height: 1.05; overflow-wrap: anywhere; }
+.meta { color: var(--muted); font-size: .88rem; font-variant-numeric: oldstyle-nums; }
+.tags { display: flex; flex-wrap: wrap; gap: 3px 9px; font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .62rem; letter-spacing: .01em; color: var(--tagc); }
+.thumb { position: relative; overflow: hidden; width: 88px; height: 88px; display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 2.2rem; letter-spacing: -0.05em; }
+.thumb::before, .hero::before { content: ""; position: absolute; inset: 0; background-size: var(--halftone-pitch) var(--halftone-pitch); -webkit-mask: radial-gradient(circle at 100% 0%, #000 20%, transparent 65%); mask: radial-gradient(circle at 100% 0%, #000 20%, transparent 65%); }
+.thumb.herzhaft, .hero.herzhaft { background: var(--ultramarine); color: var(--paper); }
+.thumb.herzhaft::before, .hero.herzhaft::before { background-image: radial-gradient(circle, var(--cobalt) 36%, transparent 39%); }
+.thumb.süß, .hero.süß { background: var(--violet); color: var(--sun); }
+.thumb.süß::before, .hero.süß::before { background-image: radial-gradient(circle, var(--midnight) 36%, transparent 39%); }
+.thumb:has(img)::before, .hero:has(img)::before { display: none; }
+.thumb > *, .hero > * { position: relative; }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.kind-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--basil); margin-right: 5px; vertical-align: 1px; }
-.kind-dot.süß { background: var(--berry); }
+.kind-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--ultramarine); margin-right: 6px; vertical-align: 0; }
+.kind-dot.süß { background: var(--violet); }
+:root[data-theme="dark"] .kind-dot { box-shadow: 0 0 0 1.5px var(--paper); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .kind-dot { box-shadow: 0 0 0 1.5px var(--paper); } }
 
-.empty { text-align: center; padding: 36px 12px; color: var(--muted); display: grid; gap: 12px; justify-items: center; }
-.empty h2 { color: var(--ink); font-size: 1.3rem; }
+.empty { text-align: center; padding: 36px 8px; color: var(--muted); display: grid; gap: 14px; justify-items: center; }
+.empty h2 { color: var(--ink); font-size: 1.6rem; }
 .empty p { margin: 0; max-width: 34ch; }
-.notice { background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r); padding: 12px 14px; font-size: .92rem; color: var(--muted); margin-top: 12px; }
+.notice { background: var(--surface); padding: 14px; font-size: .95rem; color: var(--ink); margin-top: 12px; }
+.inboxnote { display: flex; align-items: center; gap: 10px; background: var(--surface); padding: 12px 14px; margin-top: 8px; font-size: .95rem; }
+.inboxnote .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--sun); }
 
-.btn { border: 0; border-radius: 999px; padding: 12px 20px; font-weight: 700; background: var(--basil); color: var(--surface); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
-.btn.warn { background: var(--danger); color: var(--surface); }
-.btn.sm { padding: 8px 14px; font-size: .9rem; }
+.btn { border: 0; border-radius: var(--radius-badge); padding: 14px 18px; background: var(--accent); color: var(--on-accent); display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .78rem; letter-spacing: .01em; line-height: 1.15; text-align: center; }
+.btn.ghost { background: var(--surface); color: var(--ink); }
+.btn.warn { background: var(--danger); color: var(--white); }
+.btn.sun { background: var(--sun); color: var(--midnight); }
+.btn.sm { padding: 10px 13px; font-size: .7rem; }
 .btn:disabled { opacity: .5; }
-.fab { position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 6; box-shadow: 0 6px 20px rgba(0,0,0,.22); padding: 15px 22px; font-size: 1rem; }
+.fab { position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 6; padding: 17px 20px; font-size: .85rem; }
 
 /* Blätter */
 .sheet { position: fixed; inset: 0; z-index: 20; background: var(--bg); overflow-y: auto; overscroll-behavior: contain; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); animation: up .22s ease-out; }
 @keyframes up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .bar { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg); }
-.iconbtn { border: 0; width: 42px; height: 42px; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow); display: grid; place-items: center; font-size: 1.2rem; }
-.sheet .inner { max-width: 640px; margin: 0 auto; padding-inline: 16px; padding-block: 0 40px; display: grid; gap: 18px; }
+.bar strong { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .8rem; letter-spacing: .01em; }
+.iconbtn { border: 0; width: 44px; height: 44px; border-radius: var(--radius-badge); background: var(--surface); display: grid; place-items: center; font-size: 1.2rem; color: var(--ink); }
+.sheet .inner { max-width: 640px; margin: 0 auto; padding-inline: var(--margin); padding-block: 0 40px; display: grid; gap: 22px; }
 
-.hero { margin-inline: -16px; height: min(46vh, 75vw); background: var(--basil-soft); overflow: hidden; display: grid; place-items: center; color: var(--basil); font-family: var(--f-display); font-weight: 800; font-size: 5rem; max-width: calc(100% + 32px); }
-.hero.süß { background: var(--berry-soft); color: var(--berry); }
-.hero.nophoto { height: 110px; font-size: 3.4rem; }
+.hero { position: relative; overflow: hidden; margin-inline: calc(-1 * var(--margin)); max-width: calc(100% + 2 * var(--margin)); height: min(46vh, 75vw); display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 5rem; letter-spacing: -0.05em; }
+.hero.nophoto { height: 130px; font-size: 3.6rem; }
 .hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.dtitle { display: grid; gap: 8px; }
-.dtitle h2 { font-size: 1.9rem; font-weight: 800; line-height: 1.08; letter-spacing: -.015em; }
-.facts { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--muted); font-size: .9rem; font-variant-numeric: tabular-nums; }
-.section h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.stepper { display: inline-flex; align-items: center; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface); font-family: var(--f-body); font-size: .95rem; font-weight: 600; }
-.stepper button { border: 0; background: none; width: 40px; height: 38px; font-size: 1.3rem; line-height: 1; color: var(--basil); }
-.stepper span { min-width: 6.5em; text-align: center; font-variant-numeric: tabular-nums; }
-.ings { list-style: none; margin: 0; padding: 0; background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); }
-.ings li { display: grid; grid-template-columns: 5.5em 1fr; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.dtitle { display: grid; gap: 12px; }
+.dtitle h2 { font-size: clamp(1.7rem, 8vw, 2.4rem); line-height: .98; overflow-wrap: anywhere; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: .95rem; font-variant-numeric: oldstyle-nums; }
+.source { font-size: .95rem; color: var(--muted); overflow-wrap: anywhere; }
+.source a { color: var(--tagc); }
+.section h3 { font-size: 1.2rem; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.stepper { display: inline-flex; align-items: center; background: var(--surface); font-family: var(--f-serif); font-weight: 300; font-size: .95rem; text-transform: none; letter-spacing: 0; }
+.stepper button { border: 0; background: var(--sun); color: var(--midnight); width: 40px; height: 40px; font-size: 1.3rem; line-height: 1; font-family: var(--f-display); font-weight: 800; }
+.stepper span { min-width: 6.8em; text-align: center; font-variant-numeric: oldstyle-nums; }
+.ings { list-style: none; margin: 0; padding: 0; background: var(--surface); }
+.ings li { display: grid; grid-template-columns: 5.6em 1fr; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--line); cursor: pointer; align-items: baseline; }
 .ings li:last-child { border-bottom: 0; }
-.ings li.done { opacity: .4; text-decoration: line-through; }
-.ings .amt { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; color: var(--basil); }
-.ings li.grp { display: block; cursor: default; font-weight: 700; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--bg); padding-block: 8px 6px; }
-.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 10px; }
-.steps li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; cursor: pointer; }
-.steps li::before { content: counter(s); width: 2rem; height: 2rem; border-radius: 50%; background: var(--basil-soft); color: var(--basil); font-weight: 700; display: grid; place-items: center; font-size: .9rem; font-variant-numeric: tabular-nums; }
-.steps li.done { opacity: .4; }
+.ings li.done { opacity: .35; text-decoration: line-through; }
+.ings .amt { font-family: var(--f-display); font-weight: 800; font-size: .78rem; letter-spacing: -.01em; text-align: right; color: var(--tagc); font-variant-numeric: tabular-nums; }
+.ings li.grp { display: block; cursor: default; font-family: var(--f-display); font-weight: 800; font-size: .68rem; text-transform: uppercase; letter-spacing: .01em; color: var(--muted); background: var(--bg); padding-block: 12px 6px; padding-inline: 0; }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 14px; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 14px; cursor: pointer; align-items: start; }
+.steps li::before { content: counter(s); width: 40px; height: 40px; border-radius: var(--radius-badge); background: var(--badge); color: var(--on-badge); font-family: var(--f-display); font-weight: 800; display: grid; place-items: center; font-size: 1.05rem; }
+.steps li span { padding-top: 8px; }
+.steps li.done { opacity: .35; }
 .steps li.done::before { content: "✓"; }
-.hint { color: var(--muted); font-size: .82rem; margin: 6px 0 0; }
-.note { background: var(--surface); border-radius: var(--r); padding: 12px 14px; white-space: pre-wrap; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.cooked { color: var(--muted); font-size: .85rem; }
+.hint { color: var(--muted); font-size: .88rem; margin: 8px 0 0; }
+.note { background: var(--surface); padding: 14px; white-space: pre-wrap; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
 
 /* Hinzufügen */
-.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.tab { border: 1.5px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 14px 10px; display: grid; gap: 4px; justify-items: center; text-align: center; font-weight: 700; }
-.tab small { font-weight: 500; color: var(--muted); font-size: .8rem; }
-.tab[aria-pressed="true"] { border-color: var(--basil); background: var(--basil-soft); }
-.drop { border: 2px dashed var(--line); border-radius: var(--r); padding: 22px 14px; text-align: center; display: grid; gap: 10px; justify-items: center; background: var(--surface); }
-.drop.over { border-color: var(--basil); }
-.previews { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.previews div { position: relative; width: 78px; height: 78px; border-radius: 10px; overflow: hidden; background: var(--line); }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.tab { border: 0; background: var(--surface); padding: 14px 6px; display: grid; gap: 6px; justify-items: center; text-align: center; font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .7rem; letter-spacing: .01em; color: var(--ink); }
+.tab small { font-family: var(--f-serif); font-weight: 300; text-transform: none; letter-spacing: 0; font-size: .8rem; color: inherit; opacity: .8; line-height: 1.2; }
+.tab[aria-pressed="true"] { background: var(--ultramarine); color: var(--paper); }
+.drop { background: var(--surface); padding: 24px 14px; text-align: center; display: grid; gap: 12px; justify-items: center; }
+.drop.over { outline: 3px solid var(--sun); }
+.previews { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.previews div { position: relative; width: 80px; height: 80px; overflow: hidden; background: var(--line); }
 .previews img { width: 100%; height: 100%; object-fit: cover; }
-.previews button { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.6); color: #fff; font-size: .8rem; line-height: 1; }
-textarea, .field input, .field select { width: 100%; border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 12px; font-size: 1rem; }
+.previews button { position: absolute; top: 3px; right: 3px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: var(--midnight); color: var(--paper); font-size: .8rem; line-height: 1; }
+textarea, .field input, .field select { width: 100%; border: 0; background: var(--surface); border-radius: 0; padding: 12px; font-size: 1rem; font-family: var(--f-serif); font-weight: 300; }
 textarea { resize: vertical; min-height: 120px; line-height: 1.4; }
-textarea:focus, .field input:focus { border-color: var(--basil); outline: none; }
-.field { display: grid; gap: 6px; }
-.field > label, .field > .lbl { font-weight: 700; font-size: .92rem; }
+textarea::placeholder, .field input::placeholder { color: var(--muted); }
+textarea:focus, .field input:focus { outline: 3px solid var(--sun); outline-offset: 0; }
+.field { display: grid; gap: 8px; }
+.field > label, .field > .lbl { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .72rem; letter-spacing: .01em; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .row2 > * { min-width: 0; }
-.err { color: var(--danger); font-weight: 600; font-size: .92rem; margin: 0; }
+.err { color: var(--danger); font-size: .95rem; margin: 0; }
 .working { display: grid; gap: 12px; justify-items: center; text-align: center; padding: 30px 10px; }
-.spin { width: 38px; height: 38px; border-radius: 50%; border: 4px solid var(--basil-soft); border-top-color: var(--basil); animation: sp 0.9s linear infinite; }
+.working strong { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .9rem; }
+.spin { width: 40px; height: 40px; border-radius: 50%; border: 5px solid var(--line); border-top-color: var(--tagc); animation: sp .9s linear infinite; }
 @keyframes sp { to { transform: rotate(360deg); } }
-.photoedit { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; }
+.photoedit { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center; }
 .photoedit .thumb { width: 96px; height: 96px; }
 .photoedit .btns { display: flex; flex-wrap: wrap; gap: 6px; }
-.sticky-save { position: sticky; bottom: 0; background: var(--bg); padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; }
+.sticky-save { position: sticky; bottom: 0; background: var(--bg); padding-block: 10px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 6px; }
 .sticky-save .btn { flex: 1; }
+.queue { display: grid; gap: 4px; }
+.queue h3 { font-size: .9rem; margin-bottom: 6px; }
+.qitem { background: var(--surface); padding: 10px 12px; display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; font-size: .9rem; }
+.qitem .u { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.qitem .st { font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .6rem; padding: 5px 7px; border-radius: 6px; background: var(--sun); color: var(--midnight); }
+.qitem .st.fehler { background: var(--danger); color: var(--white); }
+.qitem .msg { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; }
+.qitem button { grid-column: 1 / -1; justify-self: start; border: 0; background: none; padding: 2px 0; color: var(--tagc); font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .62rem; text-decoration: underline; }
 
-.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 600; font-size: .92rem; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+.toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; background: var(--sun); color: var(--midnight); padding: 12px 16px; font-family: var(--f-display); font-weight: 800; text-transform: uppercase; font-size: .72rem; max-width: calc(100% - 32px); }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -183,12 +213,12 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
 }
 </style>
 
+<div class="band">
+  <h1>Unser<br>Kochbuch.</h1>
+  <span class="count" id="count"></span>
+</div>
 <div class="wrap">
   <header class="top">
-    <div class="brand">
-      <h1>Unser <span>Kochbuch</span></h1>
-      <span class="count" id="count"></span>
-    </div>
     <div class="search">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <label class="vh" for="q">Rezept oder Zutat suchen</label>
@@ -206,10 +236,10 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
   </header>
 
   <button class="dice" id="dice" type="button">
-    <svg class="die" viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="5" width="38" height="38" rx="9" fill="var(--surface)" stroke="var(--saffron-ink)" stroke-width="3"/><g fill="var(--saffron-ink)"><circle cx="15" cy="15" r="3.4"/><circle cx="33" cy="15" r="3.4"/><circle cx="24" cy="24" r="3.4"/><circle cx="15" cy="33" r="3.4"/><circle cx="33" cy="33" r="3.4"/></g></svg>
+    <svg class="die" viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="4" width="40" height="40" rx="10" fill="var(--midnight)"/><g fill="var(--sun)"><circle cx="15" cy="15" r="3.4"/><circle cx="33" cy="15" r="3.4"/><circle cx="24" cy="24" r="3.4"/><circle cx="15" cy="33" r="3.4"/><circle cx="33" cy="33" r="3.4"/></g></svg>
     <span class="lbl" id="dicelbl">Was kochen wir heute?<span class="sub" id="dicesub">Zufallsgericht würfeln</span></span>
-    <span aria-hidden="true" style="font-size:1.4rem">→</span>
-  </button>
+      </button>
+  <div id="inboxbox"></div>
 
   <div class="listhead">
     <h2 id="listtitle">Alle Rezepte</h2>
@@ -299,6 +329,10 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
       <label for="f-note">Notiz (optional)</label>
       <textarea id="f-note" rows="3" style="min-height:70px" placeholder="z. B. Kinder mögen es mit mehr Käse"></textarea>
     </div>
+    <div class="field">
+      <label for="f-source">Quelle (optional)</label>
+      <input id="f-source" type="url" inputmode="url" placeholder="https://… oder Kochbuch, Seite 42">
+    </div>
     <p class="err" id="f-err" hidden></p>
     <div class="sticky-save">
       <button class="btn ghost" type="button" data-close="form">Abbrechen</button>
@@ -323,7 +357,7 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
   const S = {
     recipes: [], status: "loading", q: "", kind: "alle", tags: new Set(), ings: [],
     sort: store.get("kb.sort") || "neu", canWrite: false, db: null, sample: null, maxImages: 0,
-    photos: new Map(), detail: null, lastRandom: [], form: null, draft: null,
+    photos: new Map(), inbox: [], detail: null, lastRandom: [], form: null, draft: null,
   };
 
   /* ---------- Mengen ---------- */
@@ -467,6 +501,8 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
     else if (!list.length) eb.innerHTML = `<div class="empty"><p>Kein Rezept passt zu diesen Filtern.</p><button class="btn ghost sm" type="button" data-action="reset">Filter zurücksetzen</button></div>`;
     else eb.innerHTML = "";
 
+    const waiting = S.inbox.filter(q => q.status !== "fehler").length, failed = S.inbox.length - waiting;
+    $("#inboxbox").innerHTML = S.inbox.length ? `<button type="button" class="inboxnote" data-action="add-link" style="border:0;width:100%;text-align:left;color:var(--ink)"><span class="dot"></span><span>${waiting ? `${waiting} ${waiting === 1 ? "Link wird" : "Links werden"} zu Rezepten aufbereitet.` : ""}${failed ? ` ${failed} ${failed === 1 ? "Link" : "Links"} mit Fehler.` : ""}</span></button>` : "";
     $("#fab").hidden = !(S.canWrite && S.status === "ready");
     if (S.detail && !$("#detail").hidden) renderDetail();
   }
@@ -508,6 +544,7 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
       if (snap.exists) { S.photos.set(id, snap.data().src); if (S.detail?.id === id) renderDetail(); }
     } catch {}
   }
+  function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; } }
   function ago(ts) {
     const d = Math.floor((Date.now() - ts) / 864e5);
     if (d <= 0) return "heute";
@@ -529,7 +566,7 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
     el.innerHTML = `
       <div class="bar">
         <button class="iconbtn" type="button" data-close="detail" aria-label="Zurück">←</button>
-        ${D.fromRandom ? `<button class="btn sm" type="button" data-action="reroll" style="background:var(--saffron);color:var(--saffron-ink)">Nochmal würfeln</button>` : "<span></span>"}
+        ${D.fromRandom ? `<button class="btn sm sun" type="button" data-action="reroll">Nochmal würfeln</button>` : "<span></span>"}
       </div>
       <div class="inner">
         <div class="hero ${k}${photo ? "" : " nophoto"}">${photo ? `<img src="${esc(photo)}" alt="${esc(r.title)}">` : esc((r.title || "?").charAt(0).toUpperCase())}</div>
@@ -541,6 +578,7 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
             ${r.cookCount ? `<span>${r.cookCount}× gekocht, zuletzt ${ago(r.lastCooked)}</span>` : ""}
           </div>
           ${(r.tags || []).length ? `<div class="tags">${r.tags.map(t => `<span>#${esc(t)}</span>`).join("")}</div>` : ""}
+          ${r.source ? `<p class="source" style="margin:0">Quelle: ${/^https?:\/\//i.test(r.source) ? `<a href="${esc(r.source)}" target="_blank" rel="noopener">${esc(hostOf(r.source))}</a>` : esc(r.source)}</p>` : ""}
         </div>
         <div class="section">
           <h3>Zutaten
@@ -636,45 +674,94 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
 
   /* ---------- Hinzufügen: Eingabe ---------- */
   function openAdd() {
-    S.draft = { mode: "bild", images: [], text: "", busy: false, error: "" };
+    S.draft = { mode: S.maxImages ? "bild" : S.sample ? "text" : "link", images: [], text: "", url: "", busy: false, error: "" };
     renderAdd();
     openSheet("add");
   }
+  const isUrl = v => /^https?:\/\/\S+$/i.test(String(v).trim());
+  function queueHTML() {
+    const items = [...S.inbox].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!items.length) return "";
+    return `<div class="queue"><h3>Eingereichte Links</h3>${items.map(q => `
+      <div class="qitem">
+        <span class="u">${esc(hostOf(q.url))}${q.note ? " · " + esc(q.note) : ""}</span>
+        <span class="st ${q.status === "fehler" ? "fehler" : ""}">${q.status === "fehler" ? "Fehler" : "Wartet"}</span>
+        ${q.status === "fehler" && q.message ? `<span class="msg">${esc(q.message)}</span>` : ""}
+        ${S.canWrite ? `<button type="button" data-rmq="${esc(q.id)}">Entfernen</button>` : ""}
+      </div>`).join("")}</div>`;
+  }
   function renderAdd() {
     const D = S.draft, box = $("#addinner");
-    if (!S.sample) {
-      box.innerHTML = `<div class="notice">Die KI-Erkennung ist in dieser Ansicht nicht verfügbar. Du kannst das Rezept von Hand eintragen.</div>
-        <button class="btn" type="button" data-action="manual">Von Hand eintragen</button>`;
-      return;
-    }
     if (D.busy) {
       box.innerHTML = `<div class="working"><div class="spin"></div><strong>Die KI liest das Rezept …</strong><p class="hint">Das dauert meist 10 bis 40 Sekunden.</p><button class="btn ghost sm" type="button" data-action="stop">Abbrechen</button></div>`;
       return;
     }
-    const canImg = S.maxImages > 0;
-    box.innerHTML = `
-      <div class="tabs" role="group" aria-label="Quelle">
-        ${canImg ? `<button type="button" class="tab" data-mode="bild" aria-pressed="${D.mode === "bild"}">Foto / Screenshot<small>Kochbuch, Zettel, Handy-Screenshot</small></button>` : ""}
-        <button type="button" class="tab" data-mode="text" aria-pressed="${D.mode === "text" || !canImg}">Text<small>Aus Website, Chat oder Notiz kopiert</small></button>
-      </div>
-      ${D.mode === "bild" && canImg ? `
+    const canImg = !!S.sample && S.maxImages > 0, canText = !!S.sample;
+    if (D.mode === "bild" && !canImg) D.mode = canText ? "text" : "link";
+    if (D.mode === "text" && !canText) D.mode = "link";
+    let body = "";
+    if (D.mode === "bild") body = `
         <div class="drop" id="drop">
-          ${D.images.length ? `<div class="previews">${D.images.map((im, i) => `<div><img src="${im.url}" alt="Bild ${i + 1}"><button type="button" data-rmimg="${i}" aria-label="Bild entfernen">×</button></div>`).join("")}</div>` : `<strong>Bilder vom Rezept auswählen</strong><span class="hint" style="margin:0">Bis zu ${S.maxImages} Bilder, z. B. Zutatenseite und Zubereitung. Ein Foto vom fertigen Gericht wird als Rezeptbild übernommen.</span>`}
+          ${D.images.length ? `<div class="previews">${D.images.map((im, i) => `<div><img src="${im.url}" alt="Bild ${i + 1}"><button type="button" data-rmimg="${i}" aria-label="Bild entfernen">×</button></div>`).join("")}</div>` : `<strong class="lab" style="font-size:.85rem">Bilder vom Rezept</strong><span class="hint" style="margin:0">Bis zu ${S.maxImages} Bilder, z. B. Zutatenseite und Zubereitung. Ein Foto vom fertigen Gericht wird als Rezeptbild übernommen.</span>`}
           ${D.images.length < S.maxImages ? `<label class="btn ${D.images.length ? "ghost sm" : ""}" for="addfiles">${D.images.length ? "Weiteres Bild" : "Foto aufnehmen oder auswählen"}</label>` : ""}
           <input id="addfiles" class="vh" type="file" accept="image/*" multiple>
         </div>
         <div class="field">
           <label for="addhint">Zusatzinfo (optional)</label>
-          <input id="addhint" type="text" value="${esc(D.text)}" placeholder="z. B. Wir machen es immer mit Reis statt Nudeln" style="width:100%;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px">
-        </div>` : `
+          <input id="addhint" type="text" value="${esc(D.text)}" placeholder="z. B. Wir machen es immer mit Reis statt Nudeln">
+        </div>
+        ${D.error ? `<p class="err">${esc(D.error)}</p>` : ""}
+        <button class="btn" type="button" data-action="recognize">Rezept erkennen</button>`;
+    else if (D.mode === "text") body = `
         <div class="field">
           <label for="addtext">Rezepttext</label>
           <textarea id="addtext" rows="10" placeholder="Rezept hier einfügen: Zutaten und Zubereitung. Du kannst auch einfach aufschreiben, wie ihr es kocht.">${esc(D.text)}</textarea>
-        </div>`}
-      ${D.error ? `<p class="err">${esc(D.error)}</p>` : ""}
-      <button class="btn" type="button" data-action="recognize">Rezept erkennen</button>
-      <button class="btn ghost" type="button" data-action="manual">Ohne KI von Hand eintragen</button>`;
-    if (!canImg) D.mode = "text";
+        </div>
+        ${D.error ? `<p class="err">${esc(D.error)}</p>` : ""}
+        <button class="btn" type="button" data-action="recognize">Rezept erkennen</button>`;
+    else body = `
+        <div class="field">
+          <label for="addurl">Link zum Rezept</label>
+          <input id="addurl" type="url" inputmode="url" value="${esc(D.url)}" placeholder="https://www.chefkoch.de/rezepte/…" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="addurlnote">Zusatzinfo (optional)</label>
+          <input id="addurlnote" type="text" value="${esc(D.text)}" placeholder="z. B. Mit halber Zuckermenge">
+        </div>
+        <p class="hint" style="margin:0">Claude ruft die Seite ab und legt das Rezept mit Zutaten, Schritten, Kategorien und Foto an. Es erscheint dann von selbst in der Liste.</p>
+        ${D.error ? `<p class="err">${esc(D.error)}</p>` : ""}
+        ${S.canWrite ? `<button class="btn" type="button" data-action="queue">Link einreichen</button>` : ""}
+        ${queueHTML()}`;
+    box.innerHTML = `
+      <div class="tabs" role="group" aria-label="Quelle">
+        ${canImg ? `<button type="button" class="tab" data-mode="bild" aria-pressed="${D.mode === "bild"}">Foto<small>Kochbuch, Zettel, Screenshot</small></button>` : ""}
+        ${canText ? `<button type="button" class="tab" data-mode="text" aria-pressed="${D.mode === "text"}">Text<small>Kopiert oder selbst geschrieben</small></button>` : ""}
+        <button type="button" class="tab" data-mode="link" aria-pressed="${D.mode === "link"}">Link<small>Rezept-Website</small></button>
+      </div>
+      ${!S.sample ? `<div class="notice">Die KI-Erkennung von Fotos und Text ist in dieser Ansicht nicht verfügbar. Links und Eintragen von Hand gehen trotzdem.</div>` : ""}
+      ${body}
+      <button class="btn ghost" type="button" data-action="manual">Von Hand eintragen</button>`;
+  }
+  function stashDraft() {
+    const D = S.draft;
+    if ($("#addtext")) D.text = $("#addtext").value;
+    if ($("#addhint")) D.text = $("#addhint").value;
+    if ($("#addurl")) { D.url = $("#addurl").value; D.text = $("#addurlnote").value; }
+  }
+  async function queueLink(url, note) {
+    const D = S.draft;
+    url = String(url || "").trim();
+    if (!isUrl(url)) { D.error = "Das sieht nicht nach einem Link aus. Er muss mit https:// beginnen."; renderAdd(); return; }
+    if (S.recipes.some(r => r.source === url) || S.inbox.some(q => q.url === url)) { D.error = "Diesen Link gibt es schon."; renderAdd(); return; }
+    try {
+      await S.db.collection("inbox").add({ url, note: String(note || "").trim(), createdAt: Date.now(), status: "neu" });
+      D.url = ""; D.text = ""; D.error = ""; D.mode = "link";
+      renderAdd();
+      toast("Link eingereicht");
+    } catch (e) {
+      D.error = e?.code === "invalid_argument" ? "Du darfst hier leider nichts hinzufügen." : "Der Link konnte nicht gespeichert werden. Versuch es noch einmal.";
+      renderAdd();
+    }
   }
   function addFiles(files) {
     const D = S.draft;
@@ -702,12 +789,13 @@ textarea:focus, .field input:focus { border-color: var(--basil); outline: none; 
     if (D.mode === "bild") D.text = hint; else D.text = text;
     const imgs = D.mode === "bild" ? D.images.map(i => i.file) : [];
     if (D.mode === "bild" && !imgs.length) { D.error = "Wähle zuerst mindestens ein Bild aus."; renderAdd(); return; }
+    if (D.mode === "text" && isUrl(text)) { D.text = ""; return queueLink(text, ""); }
     if (D.mode === "text" && text.length < 10) { D.error = "Füge zuerst den Rezepttext ein."; renderAdd(); return; }
 
     const known = allTags().slice(0, 60);
     const prompt = `Du hilfst einer Familie, ihr Kochbuch zu pflegen. ${imgs.length ? `Du bekommst ${imgs.length} Bild(er) (Fotos oder Screenshots) eines Rezepts.` : "Du bekommst einen Rezepttext."}
 Lies das Rezept und gib es als JSON zurück. Antworte NUR mit diesem JSON-Objekt:
-{"title": string, "kind": "herzhaft" | "süß", "servings": number, "time": number | null, "tags": string[], "ingredients": [{"amount": number | null, "unit": string, "name": string, "group": string | null}], "steps": string[], "note": string | null, "dishPhoto": number | null, "error": string | null}
+{"title": string, "kind": "herzhaft" | "süß", "servings": number, "time": number | null, "tags": string[], "ingredients": [{"amount": number | null, "unit": string, "name": string, "group": string | null}], "steps": string[], "note": string | null, "source": string | null, "dishPhoto": number | null, "error": string | null}
 
 Regeln:
 - Alles auf Deutsch (übersetzen, falls nötig). Titel kurz und natürlich.
@@ -717,6 +805,7 @@ Regeln:
 - steps: klare, kurze Arbeitsschritte ohne Nummerierung.
 - tags: 3 bis 6 Kategorien, klein geschrieben, ohne #, ohne "süß"/"herzhaft". Nimm vorhandene Kategorien, wenn sie passen: ${known.length ? known.join(", ") : "(noch keine)"}. Weitere typische: vegetarisch, vegan, fleisch, hähnchen, fisch, nudeln, reis, kartoffeln, suppe, salat, auflauf, eintopf, ofen, schnell, kuchen, backen, dessert, frühstück, asiatisch, italienisch, kinderliebling, meal-prep.
 - note: wichtige Tipps oder Varianten aus der Vorlage, sonst null.
+- source: Name des Kochbuchs, der Website oder des Autors, falls erkennbar, sonst null.
 - dishPhoto: ${imgs.length ? "0-basierter Index des Bildes, das das fertige Gericht als Foto zeigt (nicht nur Text). Wenn keines, null." : "null"}
 - Wenn kein Rezept erkennbar ist: "error" mit kurzer Erklärung, die anderen Felder leer.
 ${D.mode === "bild" && hint ? `\nHinweis der Familie: ${hint}` : ""}${D.mode === "text" ? `\nRezepttext:\n"""\n${text.slice(0, 40000)}\n"""` : ""}`;
@@ -742,7 +831,7 @@ ${D.mode === "bild" && hint ? `\nHinweis der Familie: ${hint}` : ""}${D.mode ===
         title: String(res.title || ""), kind: res.kind === "süß" ? "süß" : "herzhaft",
         servings: num(res.servings) ? Math.round(num(res.servings)) : 4, time: num(res.time) ? Math.round(num(res.time)) : null,
         tags: cleanTags(Array.isArray(res.tags) ? res.tags : []), ingredients,
-        steps: (Array.isArray(res.steps) ? res.steps : []).map(String).filter(Boolean), note: res.note ? String(res.note) : "",
+        steps: (Array.isArray(res.steps) ? res.steps : []).map(String).filter(Boolean), note: res.note ? String(res.note) : "", source: res.source ? String(res.source) : "",
       }, { photo, fromKI: true });
     } catch (e) {
       D.busy = false;
@@ -772,6 +861,7 @@ ${D.mode === "bild" && hint ? `\nHinweis der Familie: ${hint}` : ""}${D.mode ===
     $("#f-ings").value = (r.ingredients || []).map(ingToLine).join("\n");
     $("#f-steps").value = (r.steps || []).join("\n");
     $("#f-note").value = r.note || "";
+    $("#f-source").value = r.source || "";
     $("#f-err").hidden = true;
     $("#f-save").disabled = false;
     renderFormBits();
@@ -804,7 +894,7 @@ ${D.mode === "bild" && hint ? `\nHinweis der Familie: ${hint}` : ""}${D.mode ===
       servings: Math.max(1, Math.round(num($("#f-servings").value) || 4)),
       time: num($("#f-time").value) ? Math.round(num($("#f-time").value)) : null,
       tags: cleanTags($("#f-tags").value.split(/[,;\n]/)),
-      ingredients, steps, note: $("#f-note").value.trim(),
+      ingredients, steps, note: $("#f-note").value.trim(), source: $("#f-source").value.trim(),
       thumb: F.thumb || null, hasPhoto,
       createdAt: old?.createdAt || Date.now(), updatedAt: Date.now(),
       lastCooked: old?.lastCooked || null, cookCount: old?.cookCount || 0,
@@ -863,7 +953,8 @@ ${D.mode === "bild" && hint ? `\nHinweis der Familie: ${hint}` : ""}${D.mode ===
       S.detail.servings = Math.min(50, Math.max(1, (S.detail.servings ?? (r?.servings || 4)) + +d.serv));
       return renderDetail();
     }
-    if (d.mode) { S.draft.text = $("#addtext")?.value ?? $("#addhint")?.value ?? S.draft.text; S.draft.mode = d.mode; S.draft.error = ""; return renderAdd(); }
+    if (d.mode) { stashDraft(); S.draft.mode = d.mode; S.draft.error = ""; return renderAdd(); }
+    if (d.rmq) { S.db.doc("inbox/" + d.rmq).delete().catch(() => toast("Konnte nicht entfernt werden")); return; }
     if (d.rmimg) { const im = S.draft.images.splice(+d.rmimg, 1)[0]; if (im) URL.revokeObjectURL(im.url); return renderAdd(); }
     if (d.addtag) {
       const cur = cleanTags($("#f-tags").value.split(/[,;\n]/));
@@ -872,8 +963,10 @@ ${D.mode === "bild" && hint ? `\nHinweis der Familie: ${hint}` : ""}${D.mode ===
     if (d.k && S.form) { S.form.kind = d.k; return renderFormBits(); }
     switch (d.action) {
       case "add": return openAdd();
+      case "add-link": openAdd(); S.draft.mode = "link"; return renderAdd();
       case "manual": closeSheet("add"); return openForm({ kind: S.kind === "süß" ? "süß" : "herzhaft", servings: 4 });
       case "recognize": return recognize();
+      case "queue": stashDraft(); return queueLink(S.draft.url, S.draft.text);
       case "stop": return S.draft?.ctl?.abort();
       case "reroll": { const r = pickRandom(); if (r) { S.detail = { id: r.id, servings: null, fromRandom: true, doneI: new Set(), doneS: new Set(), confirmDel: false }; renderDetail(); $("#detail").scrollTop = 0; loadPhoto(r.id); } return; }
       case "cooked": return markCooked();
@@ -946,6 +1039,11 @@ ${D.mode === "bild" && hint ? `\nHinweis der Familie: ${hint}` : ""}${D.mode ===
     let can = null;
     try { can = user ? await user.can("data.write") : null; } catch {}
     S.canWrite = can !== false;
+    db.collection("inbox").onSnapshot(snap => {
+      S.inbox = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+      if (S.draft && !$("#add").hidden && S.draft.mode === "link" && !S.draft.busy) { stashDraft(); renderAdd(); }
+    }, () => {});
     db.collection("recipes").onSnapshot(snap => {
       S.recipes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       S.status = "ready";
