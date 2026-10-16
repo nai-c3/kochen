@@ -9,6 +9,7 @@ Rezeptsammlung für die Familie, als installierbare Web-App fürs Handy.
 - Herzhaft / Süß, Kategorien (#nudeln, #schnell …) und Favoriten (Stern im Rezept, Filter „Favoriten“)
 - Zufallsgericht-Würfel; er beachtet die aktiven Filter und lässt kürzlich Gekochtes aus
 - Portionen umrechnen, Zutaten und Schritte beim Kochen abhaken, Bildschirm bleibt an
+- Kochmodus: Schritt für Schritt in großer Schrift, mit den passenden Zutatenmengen je Schritt und Timern aus den Zeitangaben
 - Neue Rezepte per KI aus Foto, Screenshot, Text oder Link; oder von Hand eintragen
 - Gemeinsames Familien-Passwort, Rezepte auch offline lesbar
 - Rezept als PDF teilen (mit Foto, umgerechneten Portionen, Zutaten, Schritten, Notiz und Quelle), z. B. per WhatsApp oder Mail

@@ -178,6 +178,7 @@ function closeSheet(id) {
   $("#" + id).hidden = true;
   if ($$(".sheet").every(s => s.hidden)) document.body.style.overflow = "";
   if (id === "detail") { S.detail = null; releaseWake(); }
+  if (id === "cook") S.cook = null;
   if (id === "add" && S.draft) S.draft.token = null;
 }
 let toastT;
@@ -245,6 +246,7 @@ function renderDetail() {
         ${(r.tags || []).length ? `<div class="tags">${r.tags.map(t => `<span>#${esc(t)}</span>`).join("")}</div>` : ""}
         ${r.source ? `<p class="source" style="margin:0">Quelle: ${/^https?:\/\//i.test(r.source) ? `<a href="${esc(r.source)}" target="_blank" rel="noopener">${esc(hostOf(r.source))}</a>` : esc(r.source)}</p>` : ""}
       </div>
+      ${(r.steps || []).length ? `<button class="btn cookbtn" type="button" data-action="cook"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></svg>Kochmodus starten</button>` : ""}
       <div class="section">
         <h3>Zutaten
           <span class="stepper">
@@ -722,6 +724,116 @@ async function shareRecipe() {
   toast("PDF gespeichert");
 }
 
+/* ---------- Kochmodus ---------- */
+// Zutaten, die in einem Schritt vorkommen: Wortstämme des Zutatennamens im Schritttext suchen.
+function ingWords(name) {
+  return norm(name).split(/[^a-zäöüß]+/).filter(w => w.length >= 4 && !["oder", "nach", "etwas", "frisch", "frische", "gehackt", "gewürfelt", "fein", "klein", "groß", "große", "kleine", "geschnitten", "gerieben"].includes(w));
+}
+function stepIngredients(step, ingredients) {
+  const text = norm(step);
+  const words = text.split(/[^a-zäöüß]+/).filter(w => w.length >= 4);
+  return ingredients.filter(i => !i.h && ingWords(i.n).some(t =>
+    text.includes(t) || words.some(w => (w.length >= 5 && t.startsWith(w.slice(0, 5))) || (t.length >= 5 && w.startsWith(t.slice(0, 5))))));
+}
+// Zeitangaben wie „10 Minuten“, „ca. 1 Std.“, „30–40 Min.“ → Sekunden (erste Zahl)
+function stepTimers(step) {
+  const out = [];
+  const re = /(\d+(?:[.,]\d+)?)(?:\s*(?:-|–|bis)\s*\d+(?:[.,]\d+)?)?\s*(stunden|stunde|std\.?|h\b|minuten|minute|min\.?|sekunden|sek\.?)/gi;
+  let m;
+  while ((m = re.exec(step))) {
+    const n = parseFloat(m[1].replace(",", "."));
+    const u = m[2].toLowerCase();
+    const sec = u.startsWith("st") || u === "h" ? n * 3600 : u.startsWith("se") ? n : n * 60;
+    if (sec > 0 && sec <= 12 * 3600) out.push({ sec: Math.round(sec), label: m[0].trim() });
+  }
+  return out;
+}
+const fmtClock = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0"); };
+const timers = [];
+let timerTick = null;
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, .35, .7].forEach(t => { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 880; g.gain.value = .25; o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + .2); });
+  } catch {}
+  try { navigator.vibrate?.([300, 150, 300, 150, 300]); } catch {}
+}
+function startTimer(sec, label) {
+  timers.push({ id: Date.now() + Math.random(), end: Date.now() + sec * 1000, label, done: false });
+  if (!timerTick) timerTick = setInterval(tickTimers, 500);
+  renderTimers();
+}
+function tickTimers() {
+  for (const t of timers) if (!t.done && Date.now() >= t.end) { t.done = true; beep(); toast(`Timer „${t.label}“ ist abgelaufen`); }
+  if (!timers.length) { clearInterval(timerTick); timerTick = null; }
+  renderTimers();
+}
+function renderTimers() {
+  const box = $("#cooktimers");
+  if (!box) return;
+  box.innerHTML = timers.map(t => `<button type="button" class="ctimer ${t.done ? "done" : ""}" data-rmtimer="${t.id}" aria-label="Timer ${esc(t.label)} ${t.done ? "beenden" : "abbrechen"}">
+    <span>${t.done ? "Fertig!" : fmtClock((t.end - Date.now()) / 1000)}</span><small>${esc(t.label)} ×</small></button>`).join("");
+  box.hidden = !timers.length;
+}
+function startCook() {
+  const r = S.recipes.find(x => x.id === S.detail?.id);
+  if (!r) return;
+  S.cook = { id: r.id, serv: S.detail.servings ?? (r.servings || 4), step: 0 };
+  renderCook();
+  openSheet("cook");
+  holdWake();
+}
+function cookGo(d) {
+  const r = S.recipes.find(x => x.id === S.cook?.id);
+  if (!r) return;
+  const n = (r.steps || []).length;
+  S.cook.step = Math.min(n + 1, Math.max(0, S.cook.step + d));
+  renderCook();
+  $("#cook").scrollTop = 0;
+}
+function renderCook() {
+  const C = S.cook, r = S.recipes.find(x => x.id === C?.id);
+  if (!r) return closeSheet("cook");
+  const steps = r.steps || [], n = steps.length, f = C.serv / (r.servings || 4);
+  const amt = i => [fmtAmount(i.a != null ? i.a * f : null, i.u), i.u].filter(Boolean).join(" ");
+  const ingList = list => `<ul class="cookings">${list.map(i => i.h ? `<li class="grp">${esc(i.n)}</li>` : `<li><b>${esc(amt(i))}</b><span>${esc(i.n)}</span></li>`).join("")}</ul>`;
+  let body;
+  if (C.step === 0) {
+    body = `<p class="cooklabel">Vorbereitung · ${C.serv} ${C.serv === 1 ? "Portion" : "Portionen"}</p>
+      <h2 class="cooktitle">${esc(r.title)}</h2>
+      <p class="cooktext small">Leg dir alles bereit:</p>
+      ${ingList(r.ingredients || [])}`;
+  } else if (C.step <= n) {
+    const st = steps[C.step - 1];
+    const used = stepIngredients(st, r.ingredients || []);
+    const tms = stepTimers(st);
+    body = `<p class="cooklabel">Schritt ${C.step} von ${n}</p>
+      <p class="cooktext">${esc(st)}</p>
+      ${tms.length ? `<div class="cooktimerbtns">${tms.map(t => `<button type="button" class="btn sun" data-timer="${t.sec}" data-tlabel="${esc(t.label)}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>Timer ${esc(t.label)}</button>`).join("")}</div>` : ""}
+      ${used.length ? `<p class="cooklabel">Dafür brauchst du</p>${ingList(used)}` : ""}`;
+  } else {
+    body = `<p class="cooklabel">Geschafft</p>
+      <h2 class="cooktitle">Guten Appetit!</h2>
+      ${S.canWrite ? `<button class="btn sun" type="button" data-action="cook-done" style="margin-top:8px">Als heute gekocht merken</button>` : ""}`;
+  }
+  const pct = Math.round(C.step / (n + 1) * 100);
+  $("#cookinner").innerHTML = `
+    <div class="cookprog" aria-hidden="true"><i style="width:${pct}%"></i></div>
+    <div class="cookbody">${body}</div>`;
+  $("#cookprev").disabled = C.step === 0;
+  $("#cooknext").hidden = C.step > n;
+  $("#cooknext").textContent = C.step === 0 ? "Los geht's" : C.step === n ? "Fertig" : "Weiter";
+  renderTimers();
+}
+// Wischen im Kochmodus
+let touchX = null;
+document.addEventListener("touchstart", e => { if (!$("#cook").hidden) touchX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener("touchend", e => {
+  if (touchX == null || $("#cook").hidden) return;
+  const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+  if (Math.abs(dx) > 60) cookGo(dx < 0 ? 1 : -1);
+}, { passive: true });
+
 /* ---------- Aktionen ---------- */
 async function markCooked() {
   const r = S.recipes.find(x => x.id === S.detail?.id);
@@ -752,6 +864,8 @@ document.addEventListener("click", e => {
   const d = t.dataset;
   if (d.open) return openDetail(d.open);
   if (d.close) return closeSheet(d.close);
+  if (d.timer) return startTimer(+d.timer, d.tlabel || "");
+  if (d.rmtimer) { const i = timers.findIndex(t => String(t.id) === d.rmtimer); if (i >= 0) timers.splice(i, 1); return renderTimers(); }
   if (d.kind) { S.kind = d.kind; return render(); }
   if (d.tag) { S.tags.has(d.tag) ? S.tags.delete(d.tag) : S.tags.add(d.tag); return render(); }
   if (d.addIng !== undefined || t.hasAttribute("data-adding")) {
@@ -786,6 +900,11 @@ document.addEventListener("click", e => {
     case "fav": return toggleFav();
     case "favfilter": S.favOnly = !S.favOnly; return render();
     case "share": return shareRecipe();
+    case "cook": return startCook();
+    case "cook-prev": return cookGo(-1);
+    case "cook-next": return cookGo(1);
+    case "cook-done": closeSheet("cook"); return markCooked();
+    case "cook-exit": return closeSheet("cook");
     case "edit": { const r = S.recipes.find(x => x.id === S.detail.id); if (r) openForm(r, { id: r.id }); return; }
     case "delete": S.detail.confirmDel = true; return renderDetail();
     case "delete-no": S.detail.confirmDel = false; return renderDetail();
@@ -821,8 +940,9 @@ $("#q").addEventListener("keydown", e => {
 $("#qclear").addEventListener("click", () => { S.q = ""; $("#q").value = ""; $("#qclear").hidden = true; render(); $("#q").focus(); });
 $("#sort").addEventListener("change", e => { S.sort = e.target.value; store.set("kb.sort", S.sort); render(); });
 document.addEventListener("keydown", e => {
+  if (!$("#cook").hidden && (e.key === "ArrowRight" || e.key === "ArrowLeft")) return cookGo(e.key === "ArrowRight" ? 1 : -1);
   if (e.key !== "Escape") return;
-  for (const id of ["form", "add", "detail"]) if (!$("#" + id).hidden) return closeSheet(id);
+  for (const id of ["cook", "form", "add", "detail"]) if (!$("#" + id).hidden) return closeSheet(id);
 });
 
 // Hinzufügen: Dateien und Einfügen
