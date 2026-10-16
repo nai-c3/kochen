@@ -136,10 +136,11 @@ function render() {
   $("#sort").value = S.sort;
 
   const dice = $("#dice");
-  dice.disabled = S.status !== "ready" || !list.length;
-  if (!dice.classList.contains("rolling")) {
-    $("#dicesub").textContent = !S.recipes.length ? "Sobald Rezepte da sind" : !list.length ? "Kein Rezept passt zum Filter" : anyFilter ? `Zufällig aus ${list.length} passenden` : `Zufällig aus ${list.length} Rezepten`;
-  }
+  dice.disabled = S.status !== "ready" || !S.recipes.length;
+  dice.title = !list.length ? "Kein Rezept passt zum Filter" : anyFilter ? `Zufällig aus ${list.length} passenden Rezepten` : `Zufällig aus ${list.length} Rezepten`;
+  const showSearch = S.searchOpen || !!S.q;
+  $("#searchbox").hidden = !showSearch;
+  $("#searchbtn").setAttribute("aria-expanded", String(showSearch));
 
   $("#list").innerHTML = list.map(r => `
     <button type="button" class="card" data-open="${esc(r.id)}">
@@ -292,23 +293,12 @@ function pickRandom() {
   return r;
 }
 function roll() {
-  const list = filtered();
   const r = pickRandom();
-  if (!r) return;
+  if (!r) { toast("Kein Rezept passt zum Filter"); return; }
   const dice = $("#dice");
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduce || list.length < 2) { openDetail(r.id, true); return; }
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { openDetail(r.id, true); return; }
   dice.classList.add("rolling");
-  const sub = $("#dicesub");
-  let n = 0;
-  const iv = setInterval(() => {
-    sub.textContent = list[Math.floor(Math.random() * list.length)].title;
-    if (++n > 7) {
-      clearInterval(iv);
-      sub.textContent = r.title;
-      setTimeout(() => { dice.classList.remove("rolling"); openDetail(r.id, true); render(); }, 220);
-    }
-  }, 70);
+  setTimeout(() => { dice.classList.remove("rolling"); openDetail(r.id, true); }, 650);
 }
 
 /* ---------- Bilder ---------- */
@@ -813,6 +803,10 @@ $("#detail").addEventListener("click", e => {
 });
 
 $("#dice").addEventListener("click", roll);
+$("#searchbtn").addEventListener("click", () => {
+  if (S.searchOpen || S.q) { S.searchOpen = false; S.q = ""; $("#q").value = ""; $("#qclear").hidden = true; render(); return; }
+  S.searchOpen = true; render(); $("#q").focus();
+});
 $("#fab").addEventListener("click", openAdd);
 $("#q").addEventListener("input", e => { S.q = e.target.value; $("#qclear").hidden = !S.q; render(); });
 $("#q").addEventListener("keydown", e => {
