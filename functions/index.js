@@ -6,8 +6,8 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 const FAMILY_EMAIL = "familie@kochbuch.example";
-// Rezepte abschreiben ist Routinearbeit: das kleine, günstige Modell reicht.
-const MODEL = "claude-haiku-5-5";
+// Rezepte abschreiben ist Routinearbeit: das mittlere Modell reicht und ist deutlich günstiger als Opus.
+const MODEL = "claude-sonnet-5-5";
 const UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 
 const nullable = type => ({ anyOf: [{ type }, { type: "null" }] });
@@ -121,9 +121,11 @@ function readJson(response) {
   throw new HttpsError("internal", "Die Antwort der KI war unvollständig. Versuch es noch einmal.");
 }
 async function extract(client, content) {
-  const response = await client.messages.create({
+  const response = await client.beta.messages.create({
     model: MODEL,
     max_tokens: 16000,
+    betas: ["server-side-fallback-2026-07-01"],
+    fallbacks: "default",
     output_config: { effort: "low", format: { type: "json_schema", schema: RECIPE_SCHEMA } },
     messages: [{ role: "user", content }],
   });
@@ -133,11 +135,13 @@ async function extract(client, content) {
 async function extractViaWebFetch(client, url, prompt) {
   const messages = [{ role: "user", content: `${prompt}\n\nRufe diese Seite mit dem Web-Fetch-Werkzeug ab und lies das Rezept: ${url}\n\nAntworte am Ende NUR mit dem JSON-Objekt. Zusätzliches Feld "imageUrl": URL des Hauptfotos des Gerichts, falls auf der Seite erkennbar, sonst null.` }];
   for (let i = 0; i < 4; i++) {
-    const response = await client.messages.create({
+    const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 16000,
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
       output_config: { effort: "low" },
-      tools: [{ type: "web_fetch_20250910", name: "web_fetch", max_uses: 3 }],
+      tools: [{ type: "web_fetch_20260209", name: "web_fetch", max_uses: 3 }],
       messages,
     });
     if (response.stop_reason === "pause_turn") { messages.push({ role: "assistant", content: response.content }); continue; }
