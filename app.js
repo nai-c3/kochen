@@ -333,9 +333,10 @@ function toJpeg(bmp, maxSide, quality, square) {
 }
 async function makePhoto(file) {
   const bmp = await loadBitmap(file);
-  let src = toJpeg(bmp, 1000, .72), q = .72, side = 1000;
-  while (src.length > 220000 && side > 400) { side -= 150; q = Math.max(.5, q - .06); src = toJpeg(bmp, side, q); }
-  const thumb = toJpeg(bmp, 200, .62, true);
+  // Firestore-Dokumente dürfen max. 1 MiB groß sein: so groß und scharf wie möglich darunter bleiben.
+  let side = 1600, q = .85, src = toJpeg(bmp, side, q);
+  while (src.length > 850000 && side > 600) { side -= 200; q = Math.max(.7, q - .03); src = toJpeg(bmp, side, q); }
+  const thumb = toJpeg(bmp, 360, .72, true);
   return { src, thumb };
 }
 
